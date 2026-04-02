@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasks</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --green-50: #EAF3DE;
+            --green-100: #C0DD97;
+            --green-200: #97C459;
+            --green-400: #639922;
+            --green-600: #3B6D11;
+            --green-800: #27500A;
+            --green-900: #173404;
+            --surface: #f7faf3;
+            --card: #ffffff;
+            --border: rgba(59, 109, 17, 0.15);
+            --border-hover: rgba(59, 109, 17, 0.3);
+            --text-primary: #173404;
+            --text-secondary: #3B6D11;
+            --text-muted: #639922;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--surface);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 48px 20px;
+        }
+
+        .wrapper {
+            max-width: 580px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        header p {
+            font-size: 28px;
+            font-weight: 300;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .add-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+        }
+
+        .add-row input {
+            flex: 1;
+            height: 44px;
+            padding: 0 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            background: var(--card);
+            border: 0.5px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .add-row input::placeholder { color: var(--text-muted); }
+        .add-row input:focus { border-color: var(--green-400); }
+
+        .add-row button {
+            height: 44px;
+            padding: 0 20px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--green-600);
+            color: var(--green-50);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+
+        .add-row button:hover { background: var(--green-800); }
+
+        .task-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .task-card {
+            background: var(--card);
+            border: 0.5px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: border-color 0.15s;
+        }
+
+        .task-card:hover { border-color: var(--border-hover); }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            cursor: pointer;
+            gap: 12px;
+        }
+
+        .task-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green-200);
+            flex-shrink: 0;
+            transition: background 0.15s;
+        }
+
+        .task-card.completed .task-dot { background: var(--green-400); }
+
+        .task-name {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-primary);
+            transition: color 0.15s;
+        }
+
+        .task-card.completed .task-name {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .priority-badge {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .priority-high { background: #fff0ee; color: #993c1d; }
+        .priority-medium { background: var(--green-50); color: var(--green-600); }
+        .priority-low { background: #f0f7f0; color: var(--text-muted); }
+
+        .chevron {
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+
+        .task-card.open .chevron { transform: rotate(180deg); }
+
+        .action-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .action-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 0.5px solid var(--border);
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .action-btn:hover { background: var(--green-50); }
+        .action-btn.danger:hover { background: #fff0ee; color: #993c1d; border-color: #f5c4b3; }
+
+        .action-btn svg { width: 13px; height: 13px; }
+
+        .task-details {
+            display: none;
+            padding: 0 16px 16px;
+            border-top: 0.5px solid var(--border);
+        }
+
+        .task-card.open .task-details { display: block; }
+
+        .details-inner { padding-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+        .field-label {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .details-inner select,
+        .details-inner textarea {
+            width: 100%;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            background: var(--surface);
+            border: 0.5px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .details-inner select { height: 34px; padding: 0 10px; }
+        .details-inner textarea { padding: 8px 10px; resize: none; line-height: 1.5; }
+        .details-inner select:focus,
+        .details-inner textarea:focus { border-color: var(--green-400); }
+
+        .save-btn {
+            align-self: flex-start;
+            height: 32px;
+            padding: 0 16px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            background: var(--green-600);
+            color: var(--green-50);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .save-btn:hover { background: var(--green-800); }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 0;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <header>
+        <h1>Tasks</h1>
+        <p>What needs to get done?</p>
+    </header>
+
+    <div class="add-row">
+        <input type="text" id="task-input" placeholder="Add a new task...">
+        <button onclick="addTask()">Add task</button>
+    </div>
+
+    <div class="task-list" id="task-list">
+        {% if tasks|length == 0 %}
+        <div class="empty-state">No tasks yet. Add one above.</div>
+        {% endif %}
+        {% for task in tasks %}
+        <div class="task-card {% if task.completed %}completed{% endif %}" id="task-{{ loop.index0 }}">
+            <div class="task-header" onclick="toggleDetails({{ loop.index0 }})">
+                <div class="task-dot"></div>
+                <span class="task-name">{{ task.name }}</span>
+                <span class="priority-badge priority-{{ task.priority }}">{{ task.priority }}</span>
+                <div class="action-btns" onclick="event.stopPropagation()">
+                    {% if task.completed %}
+                    <button class="action-btn" onclick="undoTask({{ loop.index0 }})" title="Undo">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6h7a4 4 0 010 8H5M2 6l3-3M2 6l3 3"/></svg>
+                    </button>
+                    {% else %}
+                    <button class="action-btn" onclick="completeTask({{ loop.index0 }})" title="Complete">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg>
+                    </button>
+                    {% endif %}
+                    <button class="action-btn danger" onclick="removeTask({{ loop.index0 }})" title="Delete">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M6 4V2h4v2M5 4l.5 9h5L11 4"/></svg>
+                    </button>
+                </div>
+                <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+            </div>
+            <div class="task-details">
+                <div class="details-inner">
+                    <div>
+                        <div class="field-label">Priority</div>
+                        <select id="priority-{{ loop.index0 }}" onkeydown="handleDetailKey(event, {{ loop.index0 }})">
+                            <option value="high" {% if task.priority == 'high' %}selected{% endif %}>High</option>
+                            <option value="medium" {% if task.priority == 'medium' %}selected{% endif %}>Medium</option>
+                            <option value="low" {% if task.priority == 'low' %}selected{% endif %}>Low</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="field-label">Notes</div>
+                        <textarea id="notes-{{ loop.index0 }}" rows="3" placeholder="Add notes..." onkeydown="handleDetailKey(event, {{ loop.index0 }})">{{ task.notes }}</textarea>
+                    </div>
+                    <button class="save-btn" onclick="updateTask({{ loop.index0 }})">Save</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function handleDetailKey(e, index) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            updateTask(index);
+        }
+    }
+
+    function toggleDetails(index) {
+        const card = document.getElementById(`task-${index}`);
+        card.classList.toggle("open");
+    }
+
+    async function addTask() {
+        const input = document.getElementById("task-input");
+        const task = input.value.trim();
+        if (!task) return;
+        const response = await fetch("/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ task })
+        });
+        const data = await response.json();
+        input.value = "";
+        refreshList(data.tasks);
+    }
+
+    async function removeTask(index) {
+        const response = await fetch("/remove", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ index })
+        });
+        const data = await response.json();
+        refreshList(data.tasks);
+    }
+
+    async function completeTask(index) {
+        const response = await fetch("/complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ index })
+        });
+        const data = await response.json();
+        refreshList(data.tasks);
+    }
+
+    async function undoTask(index) {
+        const response = await fetch("/undo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ index })
+        });
+        const data = await response.json();
+        refreshList(data.tasks);
+    }
+
+    async function updateTask(index) {
+        const priority = document.getElementById(`priority-${index}`).value;
+        const notes = document.getElementById(`notes-${index}`).value;
+        const response = await fetch("/update", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ index, priority, notes })
+        });
+        const data = await response.json();
+        refreshList(data.tasks);
+    }
+
+    function refreshList(tasks) {
+        const list = document.getElementById("task-list");
+        if (tasks.length === 0) {
+            list.innerHTML = `<div class="empty-state">No tasks yet. Add one above.</div>`;
+            return;
+        }
+        list.innerHTML = tasks.map((task, i) => `
+        <div class="task-card ${task.completed ? "completed" : ""}" id="task-${i}">
+            <div class="task-header" onclick="toggleDetails(${i})">
+                <div class="task-dot"></div>
+                <span class="task-name">${task.name}</span>
+                <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+                <div class="action-btns" onclick="event.stopPropagation()">
+                    ${task.completed
+                        ? `<button class="action-btn" onclick="undoTask(${i})" title="Undo">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6h7a4 4 0 010 8H5M2 6l3-3M2 6l3 3"/></svg>
+                           </button>`
+                        : `<button class="action-btn" onclick="completeTask(${i})" title="Complete">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg>
+                           </button>`
+                    }
+                    <button class="action-btn danger" onclick="removeTask(${i})" title="Delete">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M6 4V2h4v2M5 4l.5 9h5L11 4"/></svg>
+                    </button>
+                </div>
+                <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+            </div>
+            <div class="task-details">
+                <div class="details-inner">
+                    <div>
+                        <div class="field-label">Priority</div>
+                        <select id="priority-${i}" onkeydown="handleDetailKey(event, ${i})">
+                            <option value="high" ${task.priority === "high" ? "selected" : ""}>High</option>
+                            <option value="medium" ${task.priority === "medium" ? "selected" : ""}>Medium</option>
+                            <option value="low" ${task.priority === "low" ? "selected" : ""}>Low</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="field-label">Notes</div>
+                        <textarea id="notes-${i}" rows="3" placeholder="Add notes..." onkeydown="handleDetailKey(event, ${i})">${task.notes}</textarea>
+                    </div>
+                    <button class="save-btn" onclick="updateTask(${i})">Save</button>
+                </div>
+            </div>
+        </div>`).join("");
+    }
+
+    document.getElementById("task-input").addEventListener("keypress", e => {
+        if (e.key === "Enter") addTask();
+    });
+</script>
+</body>
+</html>
