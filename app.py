@@ -23,7 +23,12 @@ def index():
 def add_task():
     data = request.get_json()
     tasks = load_tasks()
-    tasks.append(data["task"])
+    tasks.append({
+        "name": data["task"],
+        "priority": "medium",
+        "notes": "",
+        "completed": False
+    })
     save_tasks(tasks)
     return jsonify({"success": True, "tasks": tasks})
 
@@ -39,9 +44,7 @@ def remove_task():
 def complete_task():
     data = request.get_json()
     tasks = load_tasks()
-    index = data["index"]
-    if not tasks[index].startswith("✅"):
-        tasks[index] = "✅ " + tasks[index]
+    tasks[data["index"]]["completed"] = True
     save_tasks(tasks)
     return jsonify({"success": True, "tasks": tasks})
 
@@ -49,9 +52,17 @@ def complete_task():
 def undo_task():
     data = request.get_json()
     tasks = load_tasks()
+    tasks[data["index"]]["completed"] = False
+    save_tasks(tasks)
+    return jsonify({"success": True, "tasks": tasks})
+
+@app.route("/update", methods=["POST"])
+def update_task():
+    data = request.get_json()
+    tasks = load_tasks()
     index = data["index"]
-    if tasks[index].startswith("✅ "):
-        tasks[index] = tasks[index].replace("✅ ", "", 1)
+    tasks[index]["priority"] = data["priority"]
+    tasks[index]["notes"] = data["notes"]
     save_tasks(tasks)
     return jsonify({"success": True, "tasks": tasks})
 
