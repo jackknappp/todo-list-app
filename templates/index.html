@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        input {
+            width: 70%;
+            padding: 8px;
+            font-size: 16px;
+        }
+        button {
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 4px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: white;
+            padding: 10px;
+            margin: 6px 0;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>My To-Do List</h1>
+
+    <input type="text" id="task-input" placeholder="Enter a task...">
+    <button onclick="addTask()">Add Task</button>
+
+    <ul id="task-list">
+        {% for task in tasks %}
+        <li id="task-{{ loop.index0 }}">
+            <span>{{ task }}</span>
+            <div>
+                <button onclick="completeTask({{ loop.index0 }})">✅</button>
+                <button onclick="undoTask({{ loop.index0 }})">↩️</button>
+                <button onclick="removeTask({{ loop.index0 }})">🗑️</button>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        async function addTask() {
+            const input = document.getElementById("task-input");
+            const task = input.value.trim();
+            if (!task) return;
+            const response = await fetch("/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ task: task })
+            });
+            const data = await response.json();
+            input.value = "";
+            refreshList(data.tasks);
+        }
+
+        async function removeTask(index) {
+            const response = await fetch("/remove", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ index: index })
+            });
+            const data = await response.json();
+            refreshList(data.tasks);
+        }
+
+        async function completeTask(index) {
+            const response = await fetch("/complete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ index: index })
+            });
+            const data = await response.json();
+            refreshList(data.tasks);
+        }
+
+        async function undoTask(index) {
+            const response = await fetch("/undo", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ index: index })
+            });
+            const data = await response.json();
+            refreshList(data.tasks);
+        }
+
+        function refreshList(tasks) {
+            const ul = document.getElementById("task-list");
+            ul.innerHTML = "";
+            tasks.forEach((task, i) => {
+                ul.innerHTML += `
+                    <li id="task-${i}">
+                        <span>${task}</span>
+                        <div>
+                            <button onclick="completeTask(${i})">✅</button>
+                            <button onclick="undoTask(${i})">↩️</button>
+                            <button onclick="removeTask(${i})">🗑️</button>
+                        </div>
+                    </li>`;
+            });
+        }
+
+        document.getElementById("task-input").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") addTask();
+        });
+    </script>
+</body>
+</html>
